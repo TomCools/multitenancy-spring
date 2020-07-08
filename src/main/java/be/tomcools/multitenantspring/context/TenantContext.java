@@ -4,20 +4,15 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Getter
 @Setter(AccessLevel.PRIVATE)
 public class TenantContext {
     private static final ThreadLocal<TenantContext> THREAD_LOCAL_TENANT_CONTEXT = new InheritableThreadLocal<>();
 
-
     private String tenant;
 
-
     public static TenantContext setupNewContext(final String tenant) {
-        final TenantContext tc = newContext();
+        final TenantContext tc = clearContext();
         tc.setTenant(tenant);
         return tc;
     }
@@ -38,7 +33,7 @@ public class TenantContext {
         return tc;
     }
 
-    public static TenantContext newContext() {
+    public static TenantContext clearContext() {
         THREAD_LOCAL_TENANT_CONTEXT.set(new TenantContext());
         return getThreadLocalTenantContext();
     }

@@ -7,6 +7,7 @@ import org.springframework.util.ResourceUtils;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +27,16 @@ public class TenantUtil {
     }
 
     public synchronized Tenants getAll() {
-        if (tenants != null) {
-            return tenants;
+        if (tenants == null) {
+            this.tenants = readTenants();
         }
+        return this.tenants;
+    }
+
+    private Tenants readTenants() {
         List<TenantData> tenantList = new ArrayList<>();
         try {
-            final File tenantFolder = ResourceUtils.getFile(tenantsDirectory);
-            for (File tenantFile : tenantFolder.listFiles()) {
+            for (File tenantFile : openTenantDirectory()) {
                 final Properties tenantProperties = new Properties();
                 tenantProperties.load(new FileInputStream(tenantFile));
                 final TenantData tenantData = loadTenantProperties(tenantProperties, tenantFile);
@@ -40,11 +44,23 @@ public class TenantUtil {
             }
 
         } catch (IOException e) {
-            throw new IllegalArgumentException("EEK!", e); // TODO: Don't say EEK!
+            throw new IllegalArgumentException("Could not read Tenant Properties", e); // TODO: Don't say EEK!
         }
 
-        this.tenants = new Tenants(tenantList);
-        return this.tenants;
+        return new Tenants(tenantList);
+    }
+
+    private File[] openTenantDirectory() throws FileNotFoundException {
+        final File file = ResourceUtils.getFile(tenantsDirectory);
+        if(!file.isDirectory()) {
+            throw new IllegalArgumentException(String.format("Configured path for Tenant Properties is not a directory: %s", tenantsDirectory));
+        }
+        final File[] files = file.listFiles();
+        if(files == null) {
+            throw new IllegalArgumentException(String.format("Could not read files in directory: %s", tenantsDirectory));
+        }
+
+        return files;
     }
 
     private TenantData loadTenantProperties(Properties tenantProperties, File tenantFile) {

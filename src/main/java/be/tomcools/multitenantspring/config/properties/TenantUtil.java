@@ -44,12 +44,13 @@ public class TenantUtil {
             }
 
         } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read Tenant Properties", e); // TODO: Don't say EEK!
+            throw new IllegalArgumentException("Could not read Tenant Properties", e);
         }
 
         return new Tenants(tenantList);
     }
 
+    // Tries to read all files in the configured tenant directory
     private File[] openTenantDirectory() throws FileNotFoundException {
         final File file = ResourceUtils.getFile(tenantsDirectory);
         if(!file.isDirectory()) {
@@ -63,6 +64,7 @@ public class TenantUtil {
         return files;
     }
 
+    // read the tenant specific properties into an object, to avoid using the strings all over the place
     private TenantData loadTenantProperties(Properties tenantProperties, File tenantFile) {
         return TenantData.builder()
                 .name(tenantProperties.getProperty("name", ""))
